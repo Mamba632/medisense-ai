@@ -28,6 +28,9 @@ class OutlierClipper(BaseEstimator, TransformerMixin):
             X[col] = X[col].clip(lower=self.lower_[col], upper=self.upper_[col])
         return X.values
 
+    def get_feature_names_out(self, input_features=None):
+        return input_features
+
 
 def build_preprocessor(dataset_name: str) -> ColumnTransformer:
     config = DATASETS[dataset_name]
