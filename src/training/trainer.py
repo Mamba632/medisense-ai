@@ -1,11 +1,11 @@
 import joblib
+import pandas as pd
 
 from src.config import DATASETS, MODELS_DIR, SEED
 from src.data.loader import load_raw_dataset, get_target_column
 from src.data.preprocessor import MediSensePreprocessor
 from src.data.splitter import stratified_split
 from src.models.base_learners import get_base_learners
-from src.models.dl_model import KerasClassifierWrapper
 from src.models.stacking import StackingEnsemble
 from src.models.meta_learner import get_meta_learner
 from src.evaluation.metrics import compute_metrics, format_metrics
@@ -23,8 +23,15 @@ def train_pipeline(dataset_name: str, use_dl: bool = True) -> dict:
     df = load_raw_dataset(dataset_name)
     target_col = get_target_column(dataset_name)
 
-    # Handle liver dataset target (1/2 -> 1/0)
-    if dataset_name == "liver":
+    # Clean data: replace '?' with NaN, coerce numeric columns
+    df = df.replace("?", float("nan"))
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors="ignore")
+
+    # Binarize targets
+    if dataset_name == "heart":
+        df[target_col] = (df[target_col].astype(int) > 0).astype(int)
+    elif dataset_name == "liver":
         df[target_col] = df[target_col].map({1: 1, 2: 0})
 
     # Split
@@ -55,6 +62,8 @@ def train_pipeline(dataset_name: str, use_dl: bool = True) -> dict:
     base_learners = get_base_learners()
 
     if use_dl:
+        from src.models.dl_model import KerasClassifierWrapper
+
         dl_wrapper = KerasClassifierWrapper(input_dim=X_train.shape[1])
         base_learners.append(("keras_mlp", dl_wrapper))
 
