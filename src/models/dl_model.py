@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from tensorflow import keras
+import keras
 
 from src.config import DL_PARAMS
 
