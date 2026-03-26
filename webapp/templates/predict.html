@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ disease_info.title }} Assessment — MediSense AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <a href="{{ url_for('dashboard') }}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+        <h2 class="fw-bold mt-2" style="color: {{ disease_info.color }};">
+            {{ disease_info.icon }} {{ disease_info.title }} Risk Assessment
+        </h2>
+        <p class="text-muted">{{ disease_info.description }}</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST">
+        <div class="form-section">
+            <h5 class="section-title">Enter Your Health Indicators</h5>
+            <div class="row g-3">
+                {% for feature in features %}
+                <div class="col-md-6 col-lg-4">
+                    {% if feature in dropdown_options %}
+                    <!-- Dropdown -->
+                    <label for="{{ feature }}" class="form-label">
+                        {{ feature_labels.get(feature, feature) }}
+                    </label>
+                    <select class="form-select" id="{{ feature }}" name="{{ feature }}" required>
+                        {% for value, label in dropdown_options[feature] %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <!-- Number Input -->
+                    <label for="{{ feature }}" class="form-label">
+                        {{ feature_labels.get(feature, feature) }}
+                    </label>
+                    <input type="number" class="form-control" id="{{ feature }}" name="{{ feature }}"
+                           step="any" value="0" required>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary-custom btn-lg px-5">
+                <i class="bi bi-cpu me-2"></i> Predict My Risk
+            </button>
+        </div>
+    </form>
+
+    <!-- Info -->
+    <div class="mt-4 p-3 bg-white rounded-3 shadow-sm">
+        <p class="mb-0 text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Note:</strong> This tool provides risk estimates based on machine learning models
+            trained on clinical datasets. It is not a substitute for professional medical diagnosis.
+            Always consult a healthcare provider for medical decisions.
+        </p>
+    </div>
+</div>
+{% endblock %}

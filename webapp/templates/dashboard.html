@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MediSense AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold" style="color: var(--primary);">
+                <i class="bi bi-grid-fill me-2"></i>Dashboard
+            </h2>
+            <p class="text-muted">Welcome, {{ current_user.name }}! Select a disease type to get your risk assessment.</p>
+        </div>
+    </div>
+
+    <!-- Disease Selection Cards -->
+    <h5 class="section-title">Select Disease Type</h5>
+    <div class="row g-4 mb-5">
+        {% for key, info in diseases.items() %}
+        <div class="col-md-4">
+            <a href="{{ url_for('predict', disease=key) }}" class="disease-card card h-100">
+                <div class="card-body text-center">
+                    <div class="card-icon">{{ info.icon }}</div>
+                    <h4 class="fw-bold mt-2" style="color: {{ info.color }};">{{ info.title }}</h4>
+                    <p class="text-muted mb-3">{{ info.description }}</p>
+                    <span class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i> Start Assessment
+                    </span>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Predictions -->
+    {% if predictions %}
+    <h5 class="section-title">Recent Predictions</h5>
+    <div class="table-responsive">
+        <table class="table table-custom">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Disease</th>
+                    <th>Risk Level</th>
+                    <th>Probability</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+                {% for pred in predictions %}
+                <tr>
+                    <td>{{ pred.created_at.strftime('%d %b %Y, %H:%M') if pred.created_at else 'N/A' }}</td>
+                    <td>
+                        <span class="fw-bold">{{ diseases[pred.disease_type].icon }} {{ diseases[pred.disease_type].title }}</span>
+                    </td>
+                    <td>
+                        <span class="risk-badge risk-{{ pred.risk_label|lower }}">
+                            {{ pred.risk_label }}
+                        </span>
+                    </td>
+                    <td>{{ "%.1f"|format(pred.risk_probability * 100) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-sm">
+        View All History <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+    {% else %}
+    <div class="text-center py-4">
+        <i class="bi bi-clipboard2-pulse text-muted" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-2">No predictions yet. Select a disease above to get started!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
