@@ -1,4 +1,19 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import streamlit as st
+from app.components.styles import inject_css
+from app.components.sidebar import render_sidebar
+from app.pages import (
+    home,
+    eda_explorer,
+    risk_predictor,
+    model_performance,
+    patient_insights,
+    about,
+)
 
 st.set_page_config(
     page_title="MediSense AI",
@@ -7,20 +22,19 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.title("MediSense AI")
-st.subheader("Intelligent Health Risk Prediction System")
+inject_css()
 
-st.markdown(
-    """
-    Welcome to **MediSense AI** — an AI-powered platform for early disease risk
-    prediction. Navigate using the sidebar to explore:
+selected_page, dataset_name = render_sidebar()
 
-    - **EDA Explorer** — Interactive exploratory data analysis
-    - **Risk Predictor** — Enter patient data and get risk assessment
-    - **Model Performance** — Compare model metrics and feature importance
-    - **Patient Insights** — Population-level health analytics
-    """
-)
-
-st.markdown("---")
-st.caption("Built by Raval Manav | Supervised by Prof. Darshana Patel")
+if selected_page == "Home":
+    home.render()
+elif selected_page == "EDA Explorer":
+    eda_explorer.render(dataset_name)
+elif selected_page == "Risk Predictor":
+    risk_predictor.render(dataset_name)
+elif selected_page == "Model Performance":
+    model_performance.render(dataset_name)
+elif selected_page == "Patient Insights":
+    patient_insights.render(dataset_name)
+elif selected_page == "About":
+    about.render()
