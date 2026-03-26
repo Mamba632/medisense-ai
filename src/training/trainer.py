@@ -1,8 +1,7 @@
 import joblib
-import pandas as pd
 
 from src.config import DATASETS, MODELS_DIR, SEED
-from src.data.loader import load_raw_dataset, get_target_column
+from src.data.loader import load_clean_dataset, get_target_column
 from src.data.preprocessor import MediSensePreprocessor
 from src.data.splitter import stratified_split
 from src.models.base_learners import get_base_learners
@@ -19,20 +18,9 @@ def train_pipeline(dataset_name: str, use_dl: bool = True) -> dict:
     print(f"Training pipeline for: {dataset_name}")
     print(f"{'=' * 60}")
 
-    # Load data
-    df = load_raw_dataset(dataset_name)
+    # Load data (cleaned: '?' → NaN, targets binarized)
+    df = load_clean_dataset(dataset_name)
     target_col = get_target_column(dataset_name)
-
-    # Clean data: replace '?' with NaN, coerce numeric columns
-    df = df.replace("?", float("nan"))
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors="ignore")
-
-    # Binarize targets
-    if dataset_name == "heart":
-        df[target_col] = (df[target_col].astype(int) > 0).astype(int)
-    elif dataset_name == "liver":
-        df[target_col] = df[target_col].map({1: 1, 2: 0})
 
     # Split
     train_df, val_df, test_df = stratified_split(df, target_col)

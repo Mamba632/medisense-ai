@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from sklearn.metrics import roc_curve, roc_auc_score
 from src.config import MODELS_DIR
-from src.data.loader import load_raw_dataset, get_target_column
+from src.data.loader import load_clean_dataset, get_target_column
 from src.data.splitter import stratified_split
 from app.components.charts import roc_curve_plot
 from app.components.sidebar import dataset_selector, show_dataset_info
@@ -27,11 +27,8 @@ ensemble = joblib.load(model_path)
 preprocessor = joblib.load(MODELS_DIR / dataset_name / "preprocessor.pkl")
 
 # Load and prepare test data
-df = load_raw_dataset(dataset_name)
+df = load_clean_dataset(dataset_name)
 target_col = get_target_column(dataset_name)
-
-if dataset_name == "liver":
-    df[target_col] = df[target_col].map({1: 1, 2: 0})
 
 _, _, test_df = stratified_split(df, target_col)
 X_test = preprocessor.transform(test_df.drop(columns=[target_col]))

@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.data.loader import load_raw_dataset
+from src.data.loader import load_clean_dataset
 from src.config import DATASETS
 from app.components.charts import correlation_heatmap, distribution_plot
 from app.components.sidebar import dataset_selector, show_dataset_info
@@ -14,7 +14,7 @@ st.header("EDA Explorer")
 dataset_name = dataset_selector()
 show_dataset_info(dataset_name)
 
-df = load_raw_dataset(dataset_name)
+df = load_clean_dataset(dataset_name)
 target = DATASETS[dataset_name]["target"]
 
 tab1, tab2, tab3, tab4 = st.tabs(
