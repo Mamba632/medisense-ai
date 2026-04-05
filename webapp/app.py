@@ -1,6 +1,8 @@
 import sys
 import os
 from pathlib import Path
+import importlib.util
+import subprocess
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -75,14 +77,70 @@ def load_user(user_id):
 # Cache loaded models
 _model_cache = {}
 
+_MODULE_TO_PIP_PACKAGES = {
+    # Model unpickling dependencies
+    "xgboost": ["xgboost>=2.0.0"],
+    "lightgbm": ["lightgbm>=4.3.0"],
+    # Keras in this project is used via TensorFlow-backed Keras; install TF if needed.
+    "keras": ["tensorflow>=2.16.0", "keras>=3.0.0"],
+    "tensorflow": ["tensorflow>=2.16.0"],
+}
+
+_INSTALL_ATTEMPTS = 0
+
+
+def _install_packages(packages: list[str]) -> None:
+    """
+    Install missing runtime dependencies on-demand.
+
+    This is a best-effort mechanism to avoid "module not found" errors during prediction.
+    """
+    if not packages:
+        return
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "--upgrade"] + packages
+    )
+
+
+def _ensure_module_available(module_name: str) -> None:
+    """
+    Ensure a Python module can be imported; if not, install a best-match pip package.
+    """
+    global _INSTALL_ATTEMPTS
+
+    # If it is already importable, do nothing.
+    if importlib.util.find_spec(module_name) is not None:
+        return
+
+    _INSTALL_ATTEMPTS += 1
+    if _INSTALL_ATTEMPTS > 3:
+        # Avoid infinite install loops.
+        raise RuntimeError(
+            f"Dependency installation failed repeatedly (missing: {module_name})."
+        )
+
+    packages = _MODULE_TO_PIP_PACKAGES.get(module_name, [module_name])
+    _install_packages(packages)
+
 
 def get_model(disease):
     if disease not in _model_cache:
         model_dir = MODELS_DIR / disease
-        _model_cache[disease] = {
-            "ensemble": joblib.load(model_dir / "stacking_ensemble.pkl"),
-            "preprocessor": joblib.load(model_dir / "preprocessor.pkl"),
-        }
+        try:
+            _model_cache[disease] = {
+                "ensemble": joblib.load(model_dir / "stacking_ensemble.pkl"),
+                "preprocessor": joblib.load(model_dir / "preprocessor.pkl"),
+            }
+        except ModuleNotFoundError as e:
+            # Best-effort: install missing dependencies required for unpickling,
+            # then retry the model load once.
+            missing = getattr(e, "name", None) or str(e)
+            _ensure_module_available(missing)
+            # Retry after installing dependencies.
+            _model_cache[disease] = {
+                "ensemble": joblib.load(model_dir / "stacking_ensemble.pkl"),
+                "preprocessor": joblib.load(model_dir / "preprocessor.pkl"),
+            }
     return _model_cache[disease]
 
 
@@ -272,10 +330,34 @@ def predict(disease):
                 input_data[feature] = float(val)
 
         # Predict
-        artifacts = get_model(disease)
-        input_df = pd.DataFrame([input_data])
-        X = artifacts["preprocessor"].transform(input_df)
-        prob = float(artifacts["ensemble"].predict_proba(X)[0, 1])
+        try:
+            # Friendly UX: if the first prediction needs to install ML deps,
+            # we tell the user what's happening.
+            missing_hint = []
+            for mod in ("xgboost", "lightgbm", "tensorflow"):
+                if importlib.util.find_spec(mod) is None:
+                    missing_hint.append(mod)
+            if missing_hint:
+                flash(
+                    "Preparing prediction models (installing missing modules). Please wait...",
+                    "info",
+                )
+
+            artifacts = get_model(disease)
+            input_df = pd.DataFrame([input_data])
+            X = artifacts["preprocessor"].transform(input_df)
+            prob = float(artifacts["ensemble"].predict_proba(X)[0, 1])
+        except Exception as e:
+            # Avoid hard crashes and show a readable message in the UI.
+            flash(f"Prediction failed: {e}", "danger")
+            return render_template(
+                "predict.html",
+                disease=disease,
+                disease_info=disease_info,
+                features=features,
+                feature_labels=FEATURE_LABELS,
+                dropdown_options=DROPDOWN_OPTIONS,
+            )
 
         if prob < 0.3:
             risk_label = "Low"
@@ -300,6 +382,7 @@ def predict(disease):
         return render_template(
             "result.html",
             disease_info=disease_info,
+            disease=disease,
             probability=prob,
             risk_label=risk_label,
             input_data=input_data,

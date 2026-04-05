@@ -50,17 +50,83 @@
                         {% else %}bg-danger bg-opacity-10{% endif %}">
                         {% if risk_label == 'Low' %}
                         <h6 class="text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Low Risk</h6>
-                        <p class="mb-0 text-muted">Your health indicators suggest a low risk for {{ disease_info.title|lower }}.
-                        Continue maintaining a healthy lifestyle and regular check-ups.</p>
+                        <p class="mb-1 text-muted">
+                            Your health indicators suggest a low current risk for {{ disease_info.title|lower }}.
+                            This is encouraging, but it does not mean zero risk.
+                        </p>
+                        <ul class="text-muted small mb-0">
+                            <li>Keep following a healthy lifestyle (diet, exercise, sleep).</li>
+                            <li>Continue routine check-ups with your doctor as recommended.</li>
+                        </ul>
                         {% elif risk_label == 'Medium' %}
                         <h6 class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Medium Risk</h6>
-                        <p class="mb-0 text-muted">Your indicators show a moderate risk. Consider consulting a healthcare
-                        provider for a detailed evaluation and preventive measures.</p>
+                        <p class="mb-1 text-muted">
+                            Your indicators show a moderate risk. This means there are warning signs that deserve attention.
+                        </p>
+                        <ul class="text-muted small mb-0">
+                            <li>Book a non‑urgent appointment with your doctor and share these results.</li>
+                            <li>Discuss blood tests, lifestyle changes and regular monitoring.</li>
+                        </ul>
                         {% else %}
                         <h6 class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-2"></i>High Risk</h6>
-                        <p class="mb-0 text-muted">Your indicators suggest an elevated risk. We strongly recommend
-                        consulting a healthcare professional for further diagnosis and treatment.</p>
+                        <p class="mb-1 text-muted">
+                            Your indicators suggest an elevated risk. This means you should not ignore these findings.
+                        </p>
+                        <ul class="text-muted small mb-0">
+                            <li>Arrange a medical review as soon as possible (share this risk score with your doctor).</li>
+                            <li>If you also have strong or sudden symptoms (chest pain, breathing difficulty, fainting),
+                                follow the emergency advice below and seek immediate care.</li>
+                        </ul>
                         {% endif %}
+                    </div>
+
+                    <!-- Risk Progress + Friendly Explanation -->
+                    <div class="mt-3 p-3 bg-white rounded-3 shadow-sm mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="bi bi-graph-up me-2" style="color: var(--primary);"></i>
+                                Risk Progress
+                            </h6>
+                            <span class="text-muted small">
+                                {{ (probability * 100)|int }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar
+                                {% if risk_label == 'Low' %}bg-success
+                                {% elif risk_label == 'Medium' %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                role="progressbar"
+                                style="width: {{ (probability * 100)|int }}%;"
+                                aria-valuenow="{{ (probability * 100)|int }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        <p class="mt-2 mb-0 text-muted small">
+                            {% if risk_label == 'Low' %}
+                                Your inputs suggest a relatively low risk at this time.
+                            {% elif risk_label == 'Medium' %}
+                                Your inputs suggest a moderate risk; consider discussing this with a healthcare provider.
+                            {% else %}
+                                Your inputs suggest a high risk; please seek professional medical guidance.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- AI Explanation / What to expect -->
+                    <div class="mt-3 p-3 bg-light rounded-3 shadow-sm mb-4">
+                        <h6 class="fw-bold mb-2">
+                            <i class="bi bi-lightbulb me-2" style="color: var(--primary);"></i>
+                            How to read this result
+                        </h6>
+                        <ul class="text-muted small mb-0">
+                            <li>This is an AI screening estimate, not a diagnosis.</li>
+                            <li>
+                                In this web version, detailed “top risk factors” explanations are not currently displayed.
+                                If you want explainability, we can add SHAP-based factors in a future update.
+                            </li>
+                        </ul>
                     </div>
 
                     <!-- Input Summary -->
@@ -82,7 +148,7 @@
                     <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom me-2">
                         <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
                     </a>
-                    <a href="{{ url_for('predict', disease=disease_info.title|lower|replace(' ', '')) }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('predict', disease=disease) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-clockwise me-1"></i> New Assessment
                     </a>
                 </div>
@@ -96,7 +162,57 @@
                     Please consult a healthcare professional for medical advice.
                 </p>
             </div>
+
+            <!-- Emergency Guidance (only for High risk) -->
+            {% if risk_label == 'High' %}
+            <div class="mt-3 p-3 bg-white rounded-3 shadow-sm border border-danger-subtle">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="color: #E63946;"></i>
+                    <div class="w-100">
+                        <h6 class="text-danger fw-bold mb-2">High Risk - Emergency Check</h6>
+                        <p class="text-muted small mb-2">
+                            If you are having emergency symptoms (like chest pain/pressure, trouble breathing, fainting, or sudden severe symptoms),
+                            do not wait for AI results.
+                        </p>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emergencyNow">
+                            <label class="form-check-label text-muted small" for="emergencyNow">
+                                I have emergency symptoms right now
+                            </label>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="emergencyWarn" role="alert">
+                            Call your local emergency number (for example: 911/108) or go to the nearest hospital immediately.
+                        </div>
+
+                        <p class="text-muted small mb-0">
+                            If you are unsure, it is safer to contact local emergency services or seek immediate medical care.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  (function () {
+    var cb = document.getElementById('emergencyNow');
+    var warn = document.getElementById('emergencyWarn');
+    if (!cb || !warn) return;
+
+    function sync() {
+      if (cb.checked) warn.classList.remove('d-none');
+      else warn.classList.add('d-none');
+    }
+
+    cb.addEventListener('change', sync);
+    sync();
+  })();
+</script>
 {% endblock %}

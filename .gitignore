@@ -46,3 +46,8 @@ docker/.env
 # Misc
 *.log
 *.tmp
+
+# Local SQLite / agent state (do not commit user data)
+*.db
+.claude/
+checkpoints/
