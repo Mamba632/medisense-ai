@@ -1,8 +1,4 @@
-import sys
 import argparse
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import DATASETS
 from src.training.trainer import train_pipeline

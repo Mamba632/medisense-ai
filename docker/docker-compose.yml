@@ -1,23 +1,14 @@
 version: "3.8"
 
 services:
-  api:
+  webapp:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.api
+      dockerfile: docker/Dockerfile.webapp
     ports:
-      - "8000:8000"
+      - "5000:5000"
     environment:
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-
-  streamlit:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.streamlit
-    ports:
-      - "8501:8501"
-    environment:
-      - FASTAPI_URL=http://api:8000
-    depends_on:
-      - api
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+      - FLASK_DEBUG=0
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in docker/.env or your shell}

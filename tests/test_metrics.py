@@ -2,16 +2,10 @@
 Tests for compute_metrics (src/evaluation/metrics.py).
 """
 
-import sys
-import os
 import numpy as np
 import pytest
 
-# Ensure project root is on the path
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, PROJECT_ROOT)
-
-from src.evaluation.metrics import compute_metrics  # noqa: E402
+from src.evaluation.metrics import compute_metrics
 
 
 @pytest.fixture

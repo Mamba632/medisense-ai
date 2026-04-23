@@ -2,18 +2,12 @@
 Tests for MediSensePreprocessor (src/data/preprocessor.py).
 """
 
-import sys
-import os
 import numpy as np
 import pandas as pd
 import pytest
 
-# Ensure project root is on the path
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, PROJECT_ROOT)
-
-from src.data.preprocessor import MediSensePreprocessor  # noqa: E402
-from src.config import RAW_DATA_DIR  # noqa: E402
+from src.config import RAW_DATA_DIR
+from src.data.preprocessor import MediSensePreprocessor
 
 
 @pytest.fixture

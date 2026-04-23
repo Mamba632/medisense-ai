@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_HOST=0.0.0.0
+ENV FLASK_PORT=5000
+ENV FLASK_DEBUG=0
+
+COPY requirements-web.txt .
+RUN pip install --no-cache-dir -r requirements-web.txt
+
+COPY src/ ./src/
+COPY webapp/ ./webapp/
+COPY models_saved/ ./models_saved/
+
+CMD ["sh", "-c", "flask --app webapp.app init-db && waitress-serve --host=${FLASK_HOST} --port=${FLASK_PORT} webapp.app:app"]

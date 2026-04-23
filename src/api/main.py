@@ -3,13 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.health import router as health_router
 from src.api.schemas import (
-    HeartDiseaseInput,
-    DiabetesInput,
-    LiverDiseaseInput,
+    INPUT_SCHEMAS,
     RiskPredictionOutput,
 )
-from src.api.predict import predict_risk
 from src.config import DATASETS
+from src.services.prediction_service import (
+    PredictionValidationError,
+    predict_risk,
+    validate_prediction_input,
+)
 
 app = FastAPI(
     title="MediSense AI",
@@ -27,12 +29,6 @@ app.add_middleware(
 
 app.include_router(health_router)
 
-INPUT_SCHEMAS = {
-    "heart": HeartDiseaseInput,
-    "diabetes": DiabetesInput,
-    "liver": LiverDiseaseInput,
-}
-
 
 @app.get("/models")
 def list_models():
@@ -46,13 +42,12 @@ def predict(disease: str, data: dict):
             status_code=404, detail=f"Disease model '{disease}' not found"
         )
 
-    schema_cls = INPUT_SCHEMAS[disease]
     try:
-        validated = schema_cls(**data)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        validated = validate_prediction_input(disease, data)
+    except PredictionValidationError as e:
+        raise HTTPException(status_code=422, detail=e.field_errors) from e
 
-    result = predict_risk(disease, validated.model_dump())
+    result = predict_risk(disease, validated)
     return result
 
 

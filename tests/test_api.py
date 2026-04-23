@@ -5,15 +5,9 @@ Note: Actual prediction endpoints require trained models in models_saved/,
 so we only test routes that do not depend on model artifacts.
 """
 
-import sys
-import os
+from fastapi.testclient import TestClient
 
-# Ensure project root is on the path
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, PROJECT_ROOT)
-
-from fastapi.testclient import TestClient  # noqa: E402
-from src.api.main import app  # noqa: E402
+from src.api.main import app
 
 client = TestClient(app)
 

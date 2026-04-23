@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medisense-ai"
+version = "1.0.0"
+description = "Machine-learning health risk screening web application"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+include = ["src*", "webapp*", "scripts*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"

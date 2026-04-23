@@ -1,280 +1,118 @@
-# 🏥 MediSense AI
+# MediSense AI
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
-![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML-F7931E?style=flat&logo=scikit-learn&logoColor=white)
-![XGBoost](https://img.shields.io/badge/XGBoost-Ensemble-AA4A44?style=flat)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat&logo=fastapi&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=flat&logo=streamlit&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-DL-FF6F00?style=flat&logo=tensorflow&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Deployment-2496ED?style=flat&logo=docker&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+Intelligent Health Risk Prediction System
 
-> **Intelligent Health Risk Prediction System** — predicting heart disease, diabetes, and liver disease risk using a stacking ensemble of ML models, served through a FastAPI backend and interactive Streamlit dashboard.
+MediSense AI is a machine-learning-powered Flask web application that predicts disease risk for heart disease, diabetes, and liver disease. It includes user signup/login, a patient dashboard, prediction history, and trained ML model loading from the Flask app.
 
----
+The project keeps the core ML package in `src/` and serves the user-facing experience through `webapp/app.py`.
 
-## 📌 Table of Contents
+## Features
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [Model Architecture](#-model-architecture)
-- [Tech Stack](#-tech-stack)
-- [Model Performance](#-model-performance)
-- [Project Structure](#-project-structure)
-- [Quick Start](#-quick-start)
-- [Usage](#-usage)
-- [Use Cases](#-use-cases)
-- [Author](#-author)
-- [License](#-license)
+- Multi-disease prediction for heart disease, diabetes, and liver disease.
+- Flask web app with signup, login, dashboard, prediction forms, results, and history.
+- SQLite database through Flask-SQLAlchemy.
+- Stacking ensemble models saved under `models_saved/`.
+- Automated preprocessing with the saved preprocessor artifacts.
+- Optional FastAPI prediction API remains in `src/api/` for API testing or future integrations.
+- Docker support for running the Flask web app.
 
----
-
-## 🔍 Overview
-
-**MediSense AI** is a machine-learning-powered healthcare platform designed to assist in early risk detection for three major diseases:
-
-| Disease | Dataset | Samples |
-|---|---|---|
-| ❤️ Heart Disease | Cleveland Heart Disease | 303 |
-| 🩸 Diabetes | PIMA Indians Diabetes | 768 |
-| 🫀 Liver Disease | Indian Liver Patient | 583 |
-
-The platform combines a **stacking ensemble** of classical ML models with an optional deep learning component, served through a **FastAPI** REST backend and an interactive **Streamlit** dashboard with explainability via **SHAP**.
-
----
-
-## 🚀 Features
-
-### 🧠 Multi-Disease Prediction
-Real-time risk assessment for heart disease, diabetes, and liver disease from structured patient data.
-
-### ⚡ Stacking Ensemble Model
-Five powerful base learners combined through a meta-learner:
-
-```
-Base Models:  Random Forest  ·  XGBoost  ·  LightGBM  ·  SVM  ·  KNN
-                                      ↓
-                         Meta-Learner: Logistic Regression
-```
-
-### 🔬 Automated Preprocessing Pipeline
-Per-dataset preprocessing including outlier clipping, median imputation, standard scaling, and one-hot encoding via `MediSensePreprocessor`.
-
-### 🤖 Optional Deep Learning
-TensorFlow neural network can be plugged in as an additional base learner for improved performance.
-
-### 📊 Explainable AI (XAI)
-SHAP-based feature importance makes model decisions transparent and clinician-friendly.
-
-### 🌐 REST API (FastAPI)
-Production-ready endpoints for prediction, health checks, and feature schema inspection.
-
-### 🎛️ Interactive Dashboard (Streamlit)
-Four-page Streamlit app covering EDA Explorer, Risk Predictor, Model Performance charts, and Patient Insights.
-
-### 🐳 Dockerized Deployment
-One-command launch of both API and dashboard via Docker Compose.
-
----
-
-## 🧠 Model Architecture
-
-```
-Patient Input Data
-        │
-        ▼
-┌─────────────────────────────────────────┐
-│         Preprocessing Pipeline          │
-│  (Imputation · Scaling · Encoding)      │
-└─────────────────────────────────────────┘
-        │
-        ▼
-┌──────────────────────────────────────────────────┐
-│                  Base Learners                   │
-│                                                  │
-│  ┌──────────────┐  ┌──────────┐  ┌───────────┐  │
-│  │ Random Forest│  │ XGBoost  │  │ LightGBM  │  │
-│  └──────────────┘  └──────────┘  └───────────┘  │
-│       ┌──────────────────────┐                  │
-│       │   SVM        KNN     │                  │
-│       └──────────────────────┘                  │
-└──────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────┐
-│        Meta-Learner (Logistic           │
-│             Regression)                 │
-└─────────────────────────────────────────┘
-        │
-        ▼
-   Risk Prediction  +  SHAP Explanation
-```
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technologies |
-|---|---|
-| **Machine Learning** | scikit-learn, XGBoost, LightGBM, imbalanced-learn |
-| **Deep Learning** | TensorFlow |
-| **Explainability** | SHAP |
-| **API Backend** | FastAPI, Uvicorn, Pydantic |
-| **Dashboard** | Streamlit, Plotly, Matplotlib, Seaborn |
-| **Testing** | pytest, httpx |
-| **Deployment** | Docker, Docker Compose |
-| **Language** | Python 3.11+ |
+| --- | --- |
+| Web App | Flask, Flask-Login, Flask-SQLAlchemy, Bootstrap |
+| Machine Learning | scikit-learn, XGBoost, LightGBM, TensorFlow, imbalanced-learn |
+| Data and Explainability | pandas, numpy, SHAP |
+| Optional API | FastAPI, Uvicorn, Pydantic |
+| Testing | pytest, httpx |
+| Deployment | Docker, Docker Compose |
 
----
-
-## 📈 Model Performance
-
-Performance on held-out test sets using the stacking ensemble:
-
-| Disease | ROC-AUC | Grade |
-|---|---|---|
-| ❤️ Heart Disease | **0.9390** | 🟢 Excellent |
-| 🩸 Diabetes | **0.8367** | 🟡 Strong |
-| 🫀 Liver Disease | **0.7365** | 🟠 Good |
-
----
-
-## 📁 Project Structure
-
-```
-medisense-ai/
-│
-├── src/                          # Core source code
-│   ├── config.py                 # Settings, paths, hyperparameters
-│   ├── data/
-│   │   └── preprocessor.py       # MediSensePreprocessor pipeline
-│   ├── features/                 # Feature engineering utilities
-│   ├── models/
-│   │   └── stacking.py           # StackingEnsemble class
-│   ├── evaluation/
-│   │   └── metrics.py            # compute_metrics, format_metrics
-│   ├── training/                 # Training pipeline orchestration
-│   └── api/
-│       ├── main.py               # App entry point & routes
-│       ├── health.py             # /health endpoint
-│       ├── predict.py            # Prediction logic
-│       └── schemas.py            # Pydantic input/output models
-│
-├── app/                          # Streamlit dashboard
-│   ├── streamlit_app.py          # Main entry point
-│   ├── pages/                    # EDA, Predictor, Performance, Insights
-│   └── components/               # Reusable chart & sidebar components
-│
-├── data/
-│   ├── raw/                      # Original CSV datasets
-│   ├── processed/                # Cleaned & engineered data
-│   └── splits/                   # Train / val / test splits
-│
-├── models_saved/                 # Trained model artifacts (.pkl)
-├── notebooks/                    # Jupyter EDA notebooks
-├── scripts/                      # CLI training scripts
-├── docker/                       # Dockerfiles & docker-compose.yml
-├── tests/                        # Unit tests
-│   ├── test_preprocessor.py
-│   ├── test_stacking.py
-│   ├── test_api.py
-│   └── test_metrics.py
-│
-├── requirements.txt
-├── SETUP.md                      # Detailed setup & run guide
-└── ARCHITECTURE.md               # System architecture documentation
-```
-
----
-
-## ⚡ Quick Start
-
-### 1. Clone the Repository
+## Quick Start
 
 ```bash
-git clone https://github.com/kuntardivyang/medisense-ai.git
-cd medisense-ai
-```
-
-### 2. Create Virtual Environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-
-```bash
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
+python webapp/app.py
 ```
 
-### 4. Train All Models
+Open the Flask app at:
+
+```text
+http://localhost:5000
+```
+
+The local app creates its SQLite database automatically and uses a development-only session secret if `SECRET_KEY` is not set.
+
+If trained model files are missing from `models_saved/`, train them once:
 
 ```bash
-python scripts/train_all.py --dataset all
+python -m scripts.train_all --dataset all
 ```
 
-### 5. Start the API
+Windows shortcut after setup, if you prefer PowerShell:
+
+```powershell
+.\run_webapp.ps1
+```
+
+## Optional FastAPI Server
+
+The Flask app does not need FastAPI to run. If you want to test the API separately:
 
 ```bash
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 6. Launch the Dashboard
+API docs:
 
-```bash
-# In a new terminal
-streamlit run app/streamlit_app.py --server.port 8501
+```text
+http://localhost:8000/docs
 ```
 
-> For Docker deployment, detailed setup, and troubleshooting, see [SETUP.md](SETUP.md).
+## Docker
 
----
+```bash
+cd docker
+docker-compose up --build
+```
 
-## 💻 Usage
+The Flask app will be available at:
 
-1. **Enter patient data** via the Streamlit dashboard or POST to the `/predict` API endpoint
-2. **Receive a risk score** for heart disease, diabetes, or liver disease
-3. **Inspect feature importance** through SHAP waterfall charts
-4. **Explore model performance** on the Performance page of the dashboard
+```text
+http://localhost:5000
+```
 
----
+## Project Structure
 
-## 🎯 Use Cases
+```text
+medisense-ai/
++-- src/                    # Core ML, data, training, evaluation, optional API
++-- webapp/                 # Flask web application
+|   +-- app.py              # Flask entry point
+|   +-- templates/          # HTML templates
+|   +-- static/             # CSS and static assets
++-- data/raw/               # Original datasets
++-- models_saved/           # Trained model artifacts
++-- notebooks/              # EDA notebooks
++-- scripts/                # Training scripts
++-- docker/                 # Docker files
++-- tests/                  # Unit and smoke tests
++-- requirements.txt
++-- SETUP.md
++-- ARCHITECTURE.md
+```
 
-- 🏥 Early disease detection in clinical settings
-- 🩺 Clinical decision support tool for practitioners
-- 🚀 Health-tech startup MVP / prototype
-- 🎓 Academic research in AI-powered healthcare
+## Run Tests
 
----
+```bash
+pip install -r requirements-dev.txt
+pip install -e .
+pytest tests/ -v
+```
 
-## 📸 Screenshots
+## Author
 
-> Streamlit dashboard screenshots will be added here.
+Raval Manav
 
-<!-- Uncomment when screenshots are ready:
-![EDA Explorer](docs/screenshots/eda_explorer.png)
-![Risk Predictor](docs/screenshots/risk_predictor.png)
-![Model Performance](docs/screenshots/model_performance.png)
-![Patient Insights](docs/screenshots/patient_insights.png)
--->
-
----
-
-## 👨‍💻 Author
-
-**Raval Manav**  
-Ahmedabad Institute of Technology  
-Supervisor: **Prof. Darshana Patel**
-
----
-
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-<p align="center">Made with dedication towards improving healthcare using AI ❤️</p>
+Supervisor: Prof. Darshana Patel

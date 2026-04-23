@@ -14,42 +14,85 @@
         <p class="text-muted">{{ disease_info.description }}</p>
     </div>
 
-    <!-- Form -->
-    <form method="POST">
-        <div class="form-section">
-            <h5 class="section-title">Enter Your Health Indicators</h5>
-            <div class="row g-3">
-                {% for feature in features %}
-                <div class="col-md-6 col-lg-4">
-                    {% if feature in dropdown_options %}
-                    <!-- Dropdown -->
-                    <label for="{{ feature }}" class="form-label">
-                        {{ feature_labels.get(feature, feature) }}
-                    </label>
-                    <select class="form-select" id="{{ feature }}" name="{{ feature }}" required>
-                        {% for value, label in dropdown_options[feature] %}
-                        <option value="{{ value }}">{{ label }}</option>
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+            <!-- Form -->
+            <form method="POST">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <div class="form-section">
+                    <h5 class="section-title">Enter Your Health Indicators</h5>
+                    <div class="row g-3">
+                        {% for feature in features %}
+                        {% set meta = feature_meta.get(feature, {}) %}
+                        <div class="col-md-6">
+                            <div class="field-panel {% if field_errors.get(feature) %}field-panel-error{% endif %}">
+                                {% if feature in dropdown_options %}
+                                <!-- Dropdown -->
+                                <label for="{{ feature }}" class="form-label">
+                                    {{ feature_labels.get(feature, feature) }}
+                                </label>
+                                <select class="form-select {% if field_errors.get(feature) %}is-invalid{% endif %}"
+                                        id="{{ feature }}" name="{{ feature }}" required>
+                                    {% for value, label in dropdown_options[feature] %}
+                                    <option value="{{ value }}" {% if form_values.get(feature) == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if field_errors.get(feature) %}
+                                <div class="invalid-feedback d-block">{{ field_errors.get(feature) }}</div>
+                                {% endif %}
+                                <div class="form-text">Choose the closest value from your report.</div>
+                                {% else %}
+                                <!-- Number Input -->
+                                <label for="{{ feature }}" class="form-label">
+                                    {{ feature_labels.get(feature, feature) }}
+                                </label>
+                                <input type="number"
+                                       class="form-control {% if field_errors.get(feature) %}is-invalid{% endif %}"
+                                       id="{{ feature }}"
+                                       name="{{ feature }}"
+                                       step="{{ meta.get('step', 'any') }}"
+                                       {% if meta.get('min') is not none %}min="{{ meta.get('min') }}"{% endif %}
+                                       {% if meta.get('max') is not none %}max="{{ meta.get('max') }}"{% endif %}
+                                       placeholder="{{ meta.get('placeholder', '') }}"
+                                       value="{{ form_values.get(feature, '') }}"
+                                       required>
+                                {% if field_errors.get(feature) %}
+                                <div class="invalid-feedback d-block">{{ field_errors.get(feature) }}</div>
+                                {% endif %}
+                                {% if meta.get('hint') %}
+                                <div class="form-text">{{ meta.get('hint') }}</div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endfor %}
-                    </select>
-                    {% else %}
-                    <!-- Number Input -->
-                    <label for="{{ feature }}" class="form-label">
-                        {{ feature_labels.get(feature, feature) }}
-                    </label>
-                    <input type="number" class="form-control" id="{{ feature }}" name="{{ feature }}"
-                           step="any" value="0" required>
-                    {% endif %}
+                    </div>
                 </div>
-                {% endfor %}
-            </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary-custom btn-lg px-5">
+                        <i class="bi bi-cpu me-2"></i> Predict My Risk
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary-custom btn-lg px-5">
-                <i class="bi bi-cpu me-2"></i> Predict My Risk
-            </button>
+        <div class="col-lg-4">
+            <div class="helper-panel sticky-lg-top">
+                <div class="helper-icon">
+                    <i class="bi bi-clipboard2-check"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Before you submit</h5>
+                <ul class="text-muted small mb-0">
+                    {% for tip in assessment_tips %}
+                    <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
-    </form>
+    </div>
 
     <!-- Info -->
     <div class="mt-4 p-3 bg-white rounded-3 shadow-sm">

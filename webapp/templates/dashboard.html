@@ -13,6 +13,74 @@
         </div>
     </div>
 
+    <!-- Health Snapshot -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="insight-card">
+                <i class="bi bi-clipboard2-pulse"></i>
+                <div>
+                    <span class="insight-value">{{ stats.total }}</span>
+                    <span class="insight-label">Assessments</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="insight-card">
+                <i class="bi bi-heart-pulse"></i>
+                <div>
+                    <span class="insight-value">{{ stats.tracked_conditions }}/3</span>
+                    <span class="insight-label">Tracked areas</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="insight-card">
+                <i class="bi bi-activity"></i>
+                <div>
+                    <span class="insight-value">
+                        {% if stats.highest_probability is not none %}
+                        {{ "%.0f"|format(stats.highest_probability * 100) }}%
+                        {% else %}
+                        --
+                        {% endif %}
+                    </span>
+                    <span class="insight-label">Highest score</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="insight-card">
+                <i class="bi bi-calendar-check"></i>
+                <div>
+                    <span class="insight-value">
+                        {% if stats.last_assessment %}
+                        {{ stats.last_assessment.strftime('%d %b') }}
+                        {% else %}
+                        New
+                        {% endif %}
+                    </span>
+                    <span class="insight-label">Last check</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="care-strip mb-5">
+        <div>
+            <h5 class="mb-1">Your next useful step</h5>
+            <p class="mb-0 text-muted">
+                {% if predictions %}
+                Review your recent scores, then repeat an assessment when you have updated lab values.
+                {% else %}
+                Start with the condition you have the most recent health data for.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-clock-history me-1"></i> View History
+        </a>
+    </div>
+
     <!-- Disease Selection Cards -->
     <h5 class="section-title">Select Disease Type</h5>
     <div class="row g-4 mb-5">

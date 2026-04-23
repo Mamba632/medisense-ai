@@ -1,10 +1,24 @@
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel, Field, field_validator
+
+
+HEART_CATEGORY_VALUES = {
+    "sex": {0.0, 1.0},
+    "cp": {1.0, 2.0, 3.0, 4.0},
+    "fbs": {0.0, 1.0},
+    "restecg": {0.0, 1.0, 2.0},
+    "exang": {0.0, 1.0},
+    "slope": {1.0, 2.0, 3.0},
+    "ca": {0.0, 1.0, 2.0, 3.0},
+    "thal": {3.0, 6.0, 7.0},
+}
 
 
 class HeartDiseaseInput(BaseModel):
     age: float = Field(..., ge=1, le=120)
     sex: float = Field(..., ge=0, le=1)
-    cp: float = Field(..., ge=0, le=3)
+    cp: float = Field(..., ge=1, le=4)
     trestbps: float = Field(..., ge=60, le=250)
     chol: float = Field(..., ge=100, le=600)
     fbs: float = Field(..., ge=0, le=1)
@@ -12,9 +26,18 @@ class HeartDiseaseInput(BaseModel):
     thalach: float = Field(..., ge=50, le=220)
     exang: float = Field(..., ge=0, le=1)
     oldpeak: float = Field(..., ge=0, le=7)
-    slope: float = Field(..., ge=0, le=2)
-    ca: float = Field(..., ge=0, le=4)
-    thal: float = Field(..., ge=0, le=3)
+    slope: float = Field(..., ge=1, le=3)
+    ca: float = Field(..., ge=0, le=3)
+    thal: float = Field(..., ge=3, le=7)
+
+    @field_validator(*HEART_CATEGORY_VALUES)
+    @classmethod
+    def validate_trained_category(cls, value: float, info: Any) -> float:
+        allowed_values = HEART_CATEGORY_VALUES[info.field_name]
+        if value not in allowed_values:
+            allowed = ", ".join(str(int(item)) for item in sorted(allowed_values))
+            raise ValueError(f"Choose one of the available options: {allowed}.")
+        return value
 
 
 class DiabetesInput(BaseModel):
@@ -45,5 +68,13 @@ class RiskPredictionOutput(BaseModel):
     disease: str
     risk_probability: float
     risk_label: str
-    top_risk_factors: list[dict] = []
+    top_risk_factors: list[dict] = Field(default_factory=list)
     model_version: str = "1.0.0"
+    calibrated: bool = False
+
+
+INPUT_SCHEMAS = {
+    "heart": HeartDiseaseInput,
+    "diabetes": DiabetesInput,
+    "liver": LiverDiseaseInput,
+}

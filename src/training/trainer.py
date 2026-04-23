@@ -1,4 +1,5 @@
 import joblib
+from sklearn.linear_model import LogisticRegression
 
 from src.config import DATASETS, MODELS_DIR, SEED
 from src.data.loader import load_clean_dataset, get_target_column
@@ -74,13 +75,26 @@ def train_pipeline(dataset_name: str, use_dl: bool = True) -> dict:
     ensemble = StackingEnsemble(base_learners, meta_learner)
     ensemble.fit(X_train, y_train)
 
+    # Calibrate raw ensemble probabilities on validation data.
+    val_prob_raw = ensemble.predict_proba(X_val)[:, 1]
+    calibrator = LogisticRegression(random_state=SEED, max_iter=1000)
+    calibrator.fit(val_prob_raw.reshape(-1, 1), y_val)
+
     # Evaluate on test set
-    y_pred_test = ensemble.predict(X_test)
-    y_prob_test = ensemble.predict_proba(X_test)[:, 1]
+    y_prob_test_raw = ensemble.predict_proba(X_test)[:, 1]
+    y_prob_test = calibrator.predict_proba(y_prob_test_raw.reshape(-1, 1))[:, 1]
+    y_pred_test = (y_prob_test >= 0.5).astype(int)
     test_metrics = compute_metrics(y_test, y_pred_test, y_prob_test)
+    raw_test_metrics = compute_metrics(
+        y_test,
+        (y_prob_test_raw >= 0.5).astype(int),
+        y_prob_test_raw,
+    )
 
     print("\nStacking Ensemble — Test Set Results:")
     print(format_metrics(test_metrics))
+    print("\nRaw Probability Reference:")
+    print(format_metrics(raw_test_metrics))
 
     # Save artifacts
     save_dir = MODELS_DIR / dataset_name
@@ -88,6 +102,7 @@ def train_pipeline(dataset_name: str, use_dl: bool = True) -> dict:
 
     joblib.dump(ensemble, save_dir / "stacking_ensemble.pkl")
     joblib.dump(preprocessor, save_dir / "preprocessor.pkl")
+    joblib.dump(calibrator, save_dir / "probability_calibrator.pkl")
     print(f"\nModels saved to {save_dir}")
 
     return test_metrics
