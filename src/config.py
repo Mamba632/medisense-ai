@@ -3,6 +3,9 @@ from pathlib import Path
 
 # Project root
 ROOT_DIR = Path(__file__).resolve().parent.parent
+LOCAL_CACHE_DIR = ROOT_DIR / ".cache"
+LOCAL_CACHE_DIR.mkdir(exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", str(LOCAL_CACHE_DIR / "matplotlib"))
 
 # Directories
 DATA_DIR = ROOT_DIR / "data"

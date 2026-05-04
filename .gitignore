@@ -44,6 +44,7 @@ Thumbs.db
 docker/.env
 
 # Misc
+.cache/
 *.log
 *.tmp
 
